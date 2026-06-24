@@ -45,6 +45,7 @@
   "build": {
     "appId": "com.m4tcom.rustplusdesktop",
     "productName": "RustPlus Desktop",
+    "npmRebuild": false,
     "files": [
       "dist/**/*",
       "electron/**/*",
