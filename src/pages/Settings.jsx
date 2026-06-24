@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { SlidersHorizontal, Siren, Power, Image, Plus, Trash2, Eye, EyeOff, AlertCircle, Volume2, Bell, Webhook, Map, Heart } from 'lucide-react'
+import { SlidersHorizontal, Siren, Power, Image, Plus, Trash2, Eye, EyeOff, AlertCircle, Volume2, Bell, Webhook, Map, Heart, Send, Smartphone } from 'lucide-react'
 import HotkeyInput from '../components/HotkeyInput'
 import { useRustStore } from '../store/useRustStore'
 import { useT } from '../i18n'
@@ -48,6 +48,17 @@ export default function Settings() {
   const [overlays, setOverlays] = useState([])
   const [hotkeyErr, setHotkeyErr] = useState(null)
   const [webhook, setWebhook] = useState('')
+  const [tgToken, setTgToken] = useState('')
+  const [tgChat, setTgChat] = useState('')
+  const [poToken, setPoToken] = useState('')
+  const [poUser, setPoUser] = useState('')
+  const [testMsg, setTestMsg] = useState('') // transient "test sent" channel name
+
+  const testNotify = async (channel) => {
+    await window.electron.testNotify(channel)
+    setTestMsg(channel)
+    setTimeout(() => setTestMsg(''), 2500)
+  }
 
   // Persist a preference and mirror it into the global store (so the live
   // TTS/event watchers pick it up immediately).
@@ -65,7 +76,11 @@ export default function Settings() {
   const [newSize, setNewSize] = useState(340)
 
   useEffect(() => {
-    window.electron.getSettings().then((s) => { setSettings(s); setWebhook(s?.discordWebhook || ''); setAppSettings(s || {}) })
+    window.electron.getSettings().then((s) => {
+      setSettings(s); setWebhook(s?.discordWebhook || ''); setAppSettings(s || {})
+      setTgToken(s?.telegramBotToken || ''); setTgChat(s?.telegramChatId || '')
+      setPoToken(s?.pushoverToken || ''); setPoUser(s?.pushoverUser || '')
+    })
     window.electron.getOverlays().then(setOverlays)
     return window.electron.onOverlayState(({ id, visible }) =>
       setOverlays((list) => list.map((o) => (o.id === id ? { ...o, visible } : o))),
@@ -221,6 +236,65 @@ export default function Settings() {
           />
           <Row label={t('settings.discordAlarms')} on={!!settings.discordAlarms} onClick={() => setPref('discordAlarms', !settings.discordAlarms)} />
           <Row label={t('settings.discordChat')} on={!!settings.discordChat} onClick={() => setPref('discordChat', !settings.discordChat)} />
+        </section>
+
+        {/* Telegram (phone push) */}
+        <section className="bg-rust-card rounded-xl p-5 border border-black/30">
+          <div className="flex items-center gap-2 mb-1">
+            <Send size={17} className="text-rust-accent" />
+            <h2 className="font-semibold text-gray-100">{t('settings.telegram')}</h2>
+          </div>
+          <p className="text-sm text-gray-400 mb-3">{t('settings.telegramDesc')}</p>
+          <input
+            type="text"
+            value={tgToken}
+            onChange={(e) => setTgToken(e.target.value)}
+            onBlur={() => setPref('telegramBotToken', tgToken.trim())}
+            placeholder={t('settings.tgTokenPh')}
+            className="w-full px-3 py-2 rounded-lg bg-rust-bg border border-black/40 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-rust-accent mb-2"
+          />
+          <input
+            type="text"
+            value={tgChat}
+            onChange={(e) => setTgChat(e.target.value)}
+            onBlur={() => setPref('telegramChatId', tgChat.trim())}
+            placeholder={t('settings.tgChatPh')}
+            className="w-full px-3 py-2 rounded-lg bg-rust-bg border border-black/40 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-rust-accent mb-2"
+          />
+          <Row label={t('settings.telegramAlarms')} on={!!settings.telegramAlarms} onClick={() => setPref('telegramAlarms', !settings.telegramAlarms)} />
+          <Row label={t('settings.telegramChat')} on={!!settings.telegramChat} onClick={() => setPref('telegramChat', !settings.telegramChat)} />
+          <button onClick={() => testNotify('telegram')} className="mt-1 text-xs px-3 py-1.5 rounded-lg bg-rust-bg border border-black/40 text-gray-300 hover:border-rust-accent">
+            {testMsg === 'telegram' ? t('settings.notifTestSent') : t('settings.notifTest')}
+          </button>
+        </section>
+
+        {/* Pushover (loud phone alert) */}
+        <section className="bg-rust-card rounded-xl p-5 border border-black/30">
+          <div className="flex items-center gap-2 mb-1">
+            <Smartphone size={17} className="text-rust-accent" />
+            <h2 className="font-semibold text-gray-100">{t('settings.pushover')}</h2>
+          </div>
+          <p className="text-sm text-gray-400 mb-3">{t('settings.pushoverDesc')}</p>
+          <input
+            type="text"
+            value={poToken}
+            onChange={(e) => setPoToken(e.target.value)}
+            onBlur={() => setPref('pushoverToken', poToken.trim())}
+            placeholder={t('settings.poTokenPh')}
+            className="w-full px-3 py-2 rounded-lg bg-rust-bg border border-black/40 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-rust-accent mb-2"
+          />
+          <input
+            type="text"
+            value={poUser}
+            onChange={(e) => setPoUser(e.target.value)}
+            onBlur={() => setPref('pushoverUser', poUser.trim())}
+            placeholder={t('settings.poUserPh')}
+            className="w-full px-3 py-2 rounded-lg bg-rust-bg border border-black/40 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-rust-accent mb-2"
+          />
+          <Row label={t('settings.pushoverAlarms')} on={!!settings.pushoverAlarms} onClick={() => setPref('pushoverAlarms', !settings.pushoverAlarms)} />
+          <button onClick={() => testNotify('pushover')} className="mt-1 text-xs px-3 py-1.5 rounded-lg bg-rust-bg border border-black/40 text-gray-300 hover:border-rust-accent">
+            {testMsg === 'pushover' ? t('settings.notifTestSent') : t('settings.notifTest')}
+          </button>
         </section>
 
         {/* Custom overlays */}

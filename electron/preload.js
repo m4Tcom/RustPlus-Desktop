@@ -56,6 +56,7 @@ contextBridge.exposeInMainWorld('electron', {
   setMinimapHotkey: (accelerator) => ipcRenderer.invoke('settings:setMinimapHotkey', accelerator),
   setAutostart: (on) => ipcRenderer.invoke('settings:setAutostart', on),
   setSettings: (partial) => ipcRenderer.invoke('settings:set', partial),
+  testNotify: (channel) => ipcRenderer.invoke('settings:testNotify', channel),
   notify: (title, body) => ipcRenderer.invoke('app:notify', { title, body }),
   openExternal: (url) => ipcRenderer.invoke('app:openExternal', url),
 

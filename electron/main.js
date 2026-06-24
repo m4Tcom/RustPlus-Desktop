@@ -59,6 +59,13 @@ const store = new Store({
       discordWebhook: '',   // Discord webhook URL for raid alarms
       discordAlarms: false, // post raid alarms to Discord
       discordChat: false,   // relay team chat to Discord
+      telegramBotToken: '', // Telegram bot token (from @BotFather)
+      telegramChatId: '',   // Telegram chat id to send to
+      telegramAlarms: false,// push raid alarms to Telegram
+      telegramChat: false,  // relay team chat to Telegram
+      pushoverToken: '',    // Pushover application API token
+      pushoverUser: '',     // Pushover user key
+      pushoverAlarms: false,// push raid alarms to Pushover
     },
     language: 'de',
   },
@@ -534,7 +541,11 @@ function connect({ ip, port, steamId, playerToken }) {
           color: m.color,
           time: m.time,
         })
-        if ((store.get('settings') || {}).discordChat) postDiscord(`💬 **${m.name}**: ${m.message}`)
+        {
+          const st = store.get('settings') || {}
+          if (st.discordChat) postDiscord(`💬 **${m.name}**: ${m.message}`)
+          if (st.telegramChat) postTelegram(`💬 ${m.name}: ${m.message}`)
+        }
       }
       if (b.clanMessage?.message) {
         const m = b.clanMessage.message
@@ -731,6 +742,52 @@ function postDiscord(content) {
   req.end()
 }
 
+// Fire-and-forget push to a Telegram chat via the Bot API.
+function postTelegram(text) {
+  const s = store.get('settings') || {}
+  const token = s.telegramBotToken
+  const chatId = s.telegramChatId
+  if (!token || !chatId || !text) return
+  const data = JSON.stringify({ chat_id: chatId, text: String(text).slice(0, 4000), disable_web_page_preview: true })
+  const req = https.request(
+    { method: 'POST', hostname: 'api.telegram.org', path: `/bot${token}/sendMessage`, headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) } },
+    (res) => res.resume(),
+  )
+  req.on('error', (err) => console.warn('[telegram]', err.message))
+  req.write(data)
+  req.end()
+}
+
+// Fire-and-forget push to Pushover (loud phone alert app). priority 1 = high.
+function postPushover(title, message) {
+  const s = store.get('settings') || {}
+  const token = s.pushoverToken
+  const user = s.pushoverUser
+  if (!token || !user || !message) return
+  const data = new URLSearchParams({
+    token, user,
+    title: String(title || 'Rust+').slice(0, 250),
+    message: String(message).slice(0, 1024),
+    priority: '1',
+  }).toString()
+  const req = https.request(
+    { method: 'POST', hostname: 'api.pushover.net', path: '/1/messages.json', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(data) } },
+    (res) => res.resume(),
+  )
+  req.on('error', (err) => console.warn('[pushover]', err.message))
+  req.write(data)
+  req.end()
+}
+
+// Fan a raid alarm out to every enabled phone/chat channel.
+function pushAlarmChannels(title, message) {
+  const s = store.get('settings') || {}
+  const line = `🚨 Rust+ Alarm — ${title || 'Smart Alarm'}${message ? `: ${message}` : ''}`
+  if (s.discordAlarms) postDiscord(line)
+  if (s.telegramAlarms) postTelegram(line)
+  if (s.pushoverAlarms) postPushover('🚨 Rust+ Raid Alarm', `${title || 'Smart Alarm'}${message ? `: ${message}` : ''}`)
+}
+
 function handleFcmNotification(notif) {
   const { title, message, body } = notif
 
@@ -772,9 +829,7 @@ function handleFcmNotification(notif) {
     send('rust:alarm', { title, message, time })
     // Smart alarms are the practical raid signal -> full-screen warning + siren.
     overlay.showRaid({ time, name: title || message })
-    if ((store.get('settings') || {}).discordAlarms) {
-      postDiscord(`🚨 **Rust+ Alarm** — ${title || 'Smart Alarm'}${message ? `: ${message}` : ''}`)
-    }
+    pushAlarmChannels(title, message)
   }
 }
 
@@ -1175,6 +1230,17 @@ ipcMain.handle('settings:setAutostart', async (_e, on) => {
 ipcMain.handle('settings:set', async (_e, partial) => {
   store.set('settings', { ...store.get('settings'), ...(partial || {}) })
   return { ok: true, settings: store.get('settings') }
+})
+
+// Send a test message through one notification channel so the user can verify
+// their token/webhook/chat-id is correct.
+ipcMain.handle('settings:testNotify', async (_e, channel) => {
+  const text = '✅ Rust+ Desktop test — notifications are working.'
+  if (channel === 'discord') postDiscord(text)
+  else if (channel === 'telegram') postTelegram(text)
+  else if (channel === 'pushover') postPushover('Rust+ Desktop', text)
+  else return { ok: false }
+  return { ok: true }
 })
 
 // Native desktop notification (used by the renderer's world/team event detector).
