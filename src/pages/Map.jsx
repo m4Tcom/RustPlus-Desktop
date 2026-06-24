@@ -217,7 +217,22 @@ export default function MapPage() {
 
   const members = team?.members || []
   const onlineMembers = members.filter((m) => m.isOnline && m.x != null)
-  const me = members.find((m) => m.steamId === mySteamId)
+
+  // Members to draw on the map: everyone with a live position, plus offline
+  // members at their last-known spot. The Rust+ API drops a member's position
+  // once they go offline, so we cache the last one we saw this session.
+  const posCacheRef = useRef({})
+  const mapMembers = useMemo(() => {
+    const cache = posCacheRef.current
+    const out = []
+    for (const m of members) {
+      if (m.x != null) cache[m.steamId] = { x: m.x, y: m.y }
+      const pos = m.x != null ? { x: m.x, y: m.y } : cache[m.steamId]
+      if (pos) out.push({ ...m, x: pos.x, y: pos.y })
+    }
+    return out
+  }, [members])
+  const meMarker = mapMembers.find((m) => m.steamId === mySteamId)
 
   // Keep the open shop popup in sync with the latest marker poll.
   const activeShop = shop ? markers.find((m) => m.id === shop.id) : null
@@ -331,8 +346,8 @@ export default function MapPage() {
           {formatGameTime(time?.time)}
         </div>
         <div className="flex-1" />
-        <button onClick={() => focusWorld(me?.x ?? onlineMembers[0]?.x, me?.y ?? onlineMembers[0]?.y)}
-          disabled={!me && onlineMembers.length === 0}
+        <button onClick={() => focusWorld(meMarker?.x ?? onlineMembers[0]?.x, meMarker?.y ?? onlineMembers[0]?.y)}
+          disabled={!meMarker && onlineMembers.length === 0}
           className="flex items-center gap-1.5 text-sm px-2.5 py-1.5 rounded hover:bg-white/10 disabled:opacity-30" title={t('map.centerMeTip')}>
           <LocateFixed size={15} /> {t('map.centerMe')}
         </button>
@@ -432,15 +447,16 @@ export default function MapPage() {
               ))}
 
               {/* Teammates */}
-              {layers.team && onlineMembers.map((m) => {
+              {layers.team && mapMembers.map((m) => {
                 const isMe = m.steamId === mySteamId
+                const color = !m.isOnline ? '#6b7280' : m.isAlive ? (isMe ? '#cd4a22' : '#22c55e') : '#6b7280'
                 return (
-                  <div key={m.steamId}
-                    style={{ position: 'absolute', left: w2px(m.x), top: w2py(m.y), width: 18, height: 18, marginLeft: -9, marginTop: -9, transform: 'scale(var(--inv))', transformOrigin: 'center' }}>
+                  <div key={m.steamId} title={m.isOnline ? m.name : `${m.name} · ${t('map.offline')}`}
+                    style={{ position: 'absolute', left: w2px(m.x), top: w2py(m.y), width: 18, height: 18, marginLeft: -9, marginTop: -9, transform: 'scale(var(--inv))', transformOrigin: 'center', opacity: m.isOnline ? 1 : 0.4 }}>
                     <div className="w-full h-full rounded-full border-2 shadow-md"
-                      style={{ background: m.isAlive ? (isMe ? '#cd4a22' : '#22c55e') : '#6b7280', borderColor: '#000' }} />
+                      style={{ background: color, borderColor: '#000' }} />
                     <div className="absolute left-[22px] top-1/2 -translate-y-1/2 whitespace-nowrap text-[13px] font-medium"
-                      style={{ color: '#fff', textShadow: '0 0 3px #000, 0 0 3px #000' }}>
+                      style={{ color: '#fff', textShadow: '0 0 3px #000, 0 0 3px #000', opacity: m.isOnline ? 1 : 0.85 }}>
                       {m.name}{isMe ? ` (${t('map.you')})` : ''}
                     </div>
                   </div>
