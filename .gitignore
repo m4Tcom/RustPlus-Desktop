@@ -1,0 +1,14 @@
+node_modules/
+dist/
+release/
+.DS_Store
+*.log
+npm-debug.log*
+
+# Local tooling / agent data
+.claude/
+
+# Editor / OS
+.vscode/
+.idea/
+Thumbs.db

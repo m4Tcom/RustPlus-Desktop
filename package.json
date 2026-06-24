@@ -1,0 +1,70 @@
+{
+  "name": "rustplus-desktop",
+  "version": "0.1.0",
+  "description": "Free, open-source desktop app for Rust+ (Electron + React). Not affiliated with Facepunch Studios.",
+  "author": "m4Tcom",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/m4Tcom/RustPlus-Desktop.git"
+  },
+  "homepage": "https://github.com/m4Tcom/RustPlus-Desktop",
+  "main": "electron/main.js",
+  "type": "commonjs",
+  "scripts": {
+    "postinstall": "patch-package",
+    "dev:vite": "vite",
+    "dev:electron": "wait-on tcp:5173 && cross-env NODE_ENV=development electron .",
+    "dev": "concurrently -k -n VITE,ELECTRON -c blue,green \"npm:dev:vite\" \"npm:dev:electron\"",
+    "build:vite": "vite build",
+    "build": "vite build && electron-builder",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@liamcottle/rustplus.js": "latest",
+    "electron-store": "^8.1.0",
+    "lucide-react": "latest",
+    "react": "^18",
+    "react-dom": "^18",
+    "uiohook-napi": "^1.5.5",
+    "zustand": "^4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4",
+    "autoprefixer": "^10",
+    "concurrently": "latest",
+    "cross-env": "latest",
+    "electron": "latest",
+    "electron-builder": "latest",
+    "patch-package": "^8.0.1",
+    "postcss": "^8",
+    "tailwindcss": "^3",
+    "vite": "^5",
+    "wait-on": "latest"
+  },
+  "build": {
+    "appId": "com.m4tcom.rustplusdesktop",
+    "productName": "RustPlus Desktop",
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "**/node_modules/uiohook-napi/**"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

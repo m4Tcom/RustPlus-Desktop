@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: transparent;
+    font-family: system-ui, "Segoe UI", sans-serif; -webkit-user-select: none; cursor: default; }
+  /* Raid warning */
+  #raid { position: fixed; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; color: #fff; }
+  .border { position: fixed; inset: 0; border: 16px solid #ff2b2b; box-sizing: border-box;
+    animation: flash .7s steps(1, end) infinite; }
+  #raid.flash { animation: flash .7s steps(1, end) infinite; }
+  @keyframes flash {
+    0%   { background: rgba(170,15,15,0.34); }
+    50%  { background: rgba(90,0,0,0.06); }
+    100% { background: rgba(170,15,15,0.34); }
+  }
+  #raid h1 { font-size: 7vw; font-weight: 900; letter-spacing: .04em; margin: 0;
+    color: #ff3b3b; text-shadow: 0 0 22px #000, 0 0 10px #f00; }
+  #raid p { font-size: 2vw; margin: .4em 0 0; opacity: .9; text-shadow: 0 0 8px #000; }
+  #raid .sub { font-size: 1.4vw; opacity: .8; }
+  /* Image overlay */
+  #image { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  #image.br { align-items: flex-end; justify-content: flex-end; padding: 4px; }
+  #image img { max-width: 100%; max-height: 100%; object-fit: contain;
+    filter: drop-shadow(0 0 12px rgba(0,0,0,0.6)); }
+</style>
+</head>
+<body>
+<script>
+  const p = new URLSearchParams(location.search)
+  const mode = p.get('mode')
+
+  if (mode === 'raid') {
+    document.body.innerHTML =
+      '<div class="border"></div>' +
+      '<div id="raid" class="flash">' +
+      '<h1>⚠ DU WIRST GERAIDET ⚠</h1>' +
+      '<p>YOU ARE BEING RAIDED</p>' +
+      '<p class="sub" id="sub"></p></div>'
+    const t = Number(p.get('time')) || Date.now()
+    const name = p.get('name') || ''
+    document.getElementById('sub').textContent =
+      (name ? name + ' · ' : '') + new Date(t).toLocaleTimeString()
+
+    // Synthesized two-tone siren (no audio file needed).
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)()
+      const gain = ctx.createGain()
+      gain.gain.value = 0.0001
+      gain.connect(ctx.destination)
+      const osc = ctx.createOscillator()
+      osc.type = 'sawtooth'
+      osc.connect(gain)
+      osc.start()
+      gain.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.05)
+      let up = true
+      const sweep = () => {
+        const now = ctx.currentTime
+        osc.frequency.cancelScheduledValues(now)
+        osc.frequency.setValueAtTime(up ? 600 : 900, now)
+        osc.frequency.linearRampToValueAtTime(up ? 900 : 600, now + 0.45)
+        up = !up
+      }
+      sweep()
+      setInterval(sweep, 450)
+    } catch (e) { /* audio not available */ }
+  } else if (mode === 'image') {
+    const src = p.get('src') || ''
+    const img = document.createElement('img')
+    img.src = src
+    const wrap = document.createElement('div')
+    wrap.id = 'image'
+    if (p.get('pos') === 'br') wrap.className = 'br'
+    wrap.appendChild(img)
+    document.body.appendChild(wrap)
+  }
+</script>
+</body>
+</html>

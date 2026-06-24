@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; -webkit-user-select: none; user-select: none; }
+    #wrap { width: 100vw; height: 100vh; border-radius: 12px; overflow: hidden; border: 2px solid rgba(205,74,34,0.7); box-sizing: border-box; background: #0d1b2a; }
+    #wrap.warn { animation: warnpulse 0.5s ease-in-out 6; }
+    @keyframes warnpulse { 0%,100% { border-color: rgba(205,74,34,0.7); } 50% { border-color: #ef4444; box-shadow: inset 0 0 30px rgba(239,68,68,0.6); } }
+    canvas { display: block; width: 100%; height: 100%; }
+    #empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #8aa; font: 13px sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <canvas id="c"></canvas>
+    <div id="empty">…</div>
+  </div>
+  <script>
+    const canvas = document.getElementById('c')
+    const ctx = canvas.getContext('2d')
+    const emptyEl = document.getElementById('empty')
+    let state = null
+    let img = null
+    let imgKey = null
+
+    function sizeCanvas() {
+      const dpr = window.devicePixelRatio || 1
+      canvas.width = Math.round(window.innerWidth * dpr)
+      canvas.height = Math.round(window.innerHeight * dpr)
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    }
+    window.addEventListener('resize', () => { sizeCanvas(); render() })
+    sizeCanvas()
+
+    function render() {
+      const W = window.innerWidth, H = window.innerHeight
+      ctx.clearRect(0, 0, W, H)
+      if (!state || !img || !img.complete || !img.naturalWidth) return
+      emptyEl.style.display = 'none'
+
+      const iw = state.width, ih = state.height
+      const scale = Math.min(W / iw, H / ih)
+      const dw = iw * scale, dh = ih * scale
+      const ox = (W - dw) / 2, oy = (H - dh) / 2
+      ctx.drawImage(img, ox, oy, dw, dh)
+
+      const mapSize = state.mapSize || 0
+      const margin = state.margin || 0
+      const diff = mapSize ? (iw - 2 * margin) / mapSize : 0
+      const toPx = (x, y) => [ox + (margin + x * diff) * scale, oy + (ih - (margin + y * diff)) * scale]
+
+      // Event markers (chinook / cargo / heli / crate / explosion).
+      const EVENT = {
+        2: { color: '#dc2626', label: '✸' }, // explosion
+        4: { color: '#a855f7', label: 'C' },  // chinook
+        5: { color: '#3b82f6', label: '▣' }, // cargo ship
+        6: { color: '#f59e0b', label: '□' }, // locked crate
+        8: { color: '#ef4444', label: 'H' },  // patrol heli
+      }
+      for (const k of state.markers || []) {
+        const ev = EVENT[k.type]
+        if (!ev || k.x == null) continue
+        const [px, py] = toPx(k.x, k.y)
+        ctx.beginPath()
+        ctx.arc(px, py, 5, 0, Math.PI * 2)
+        ctx.fillStyle = ev.color
+        ctx.fill()
+        ctx.lineWidth = 1.5
+        ctx.strokeStyle = '#000'
+        ctx.stroke()
+        ctx.font = 'bold 8px sans-serif'
+        ctx.fillStyle = '#fff'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(ev.label, px, py + 0.5)
+        ctx.textAlign = 'start'
+        ctx.textBaseline = 'alphabetic'
+      }
+
+      for (const m of state.members || []) {
+        if (m.x == null) continue // unknown position (never seen online)
+        const [px, py] = toPx(m.x, m.y)
+        const isMe = m.steamId && m.steamId === state.mySteamId
+        ctx.globalAlpha = m.isOnline ? 1 : 0.5
+        ctx.beginPath()
+        ctx.arc(px, py, m.isOnline ? 5 : 4, 0, Math.PI * 2)
+        ctx.fillStyle = !m.isOnline ? '#9ca3af' : !m.isAlive ? '#6b7280' : isMe ? '#cd4a22' : '#22c55e'
+        ctx.fill()
+        ctx.lineWidth = 1.5
+        ctx.strokeStyle = '#000'
+        ctx.stroke()
+        if (m.name) {
+          const label = m.name.length > 8 ? m.name.slice(0, 8) : m.name
+          ctx.font = (m.isOnline ? '11px' : '10px') + ' sans-serif'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'bottom'
+          ctx.fillStyle = '#fff'
+          ctx.strokeStyle = 'rgba(0,0,0,0.9)'
+          ctx.lineWidth = 2.5
+          const ty = py - (m.isOnline ? 7 : 6)
+          ctx.strokeText(label, px, ty)
+          ctx.fillText(label, px, ty)
+          ctx.textAlign = 'start'
+          ctx.textBaseline = 'alphabetic'
+        }
+        ctx.globalAlpha = 1
+      }
+    }
+
+    let lastWarn = 0
+    const wrap = document.getElementById('wrap')
+    function flashWarn() {
+      wrap.classList.remove('warn')
+      void wrap.offsetWidth // restart animation
+      wrap.classList.add('warn')
+      setTimeout(() => wrap.classList.remove('warn'), 3200)
+    }
+
+    window.__minimap = (data) => {
+      state = data
+      if (data.warn && data.warn !== lastWarn) { lastWarn = data.warn; flashWarn() }
+      const key = data.jpg ? data.jpg.length + ':' + data.width : null
+      if (key && key !== imgKey) {
+        imgKey = key
+        img = new Image()
+        img.onload = render
+        img.src = 'data:image/jpeg;base64,' + data.jpg
+      } else {
+        render()
+      }
+    }
+  </script>
+</body>
+</html>
