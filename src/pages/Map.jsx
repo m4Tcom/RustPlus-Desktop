@@ -346,8 +346,8 @@ export default function MapPage() {
           {formatGameTime(time?.time)}
         </div>
         <div className="flex-1" />
-        <button onClick={() => focusWorld(meMarker?.x ?? onlineMembers[0]?.x, meMarker?.y ?? onlineMembers[0]?.y)}
-          disabled={!meMarker && onlineMembers.length === 0}
+        <button onClick={() => meMarker && focusWorld(meMarker.x, meMarker.y)}
+          disabled={!meMarker}
           className="flex items-center gap-1.5 text-sm px-2.5 py-1.5 rounded hover:bg-white/10 disabled:opacity-30" title={t('map.centerMeTip')}>
           <LocateFixed size={15} /> {t('map.centerMe')}
         </button>
@@ -449,7 +449,9 @@ export default function MapPage() {
               {/* Teammates */}
               {layers.team && mapMembers.map((m) => {
                 const isMe = m.steamId === mySteamId
-                const color = !m.isOnline ? '#6b7280' : m.isAlive ? (isMe ? '#cd4a22' : '#22c55e') : '#6b7280'
+                // "Me" is always the rust-orange dot (dimmed when offline) so it
+                // stays easy to spot; teammates are green alive / grey otherwise.
+                const color = isMe ? '#cd4a22' : !m.isOnline ? '#6b7280' : m.isAlive ? '#22c55e' : '#6b7280'
                 return (
                   <div key={m.steamId} title={m.isOnline ? m.name : `${m.name} · ${t('map.offline')}`}
                     style={{ position: 'absolute', left: w2px(m.x), top: w2py(m.y), width: 18, height: 18, marginLeft: -9, marginTop: -9, transform: 'scale(var(--inv))', transformOrigin: 'center', opacity: m.isOnline ? 1 : 0.4 }}>
