@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { SlidersHorizontal, Siren, Power, Image, Plus, Trash2, Eye, EyeOff, AlertCircle, Volume2, Bell, Webhook, Map, Heart, Send, Smartphone } from 'lucide-react'
+import { SlidersHorizontal, Siren, Power, Image, Plus, Trash2, Eye, EyeOff, AlertCircle, Volume2, Bell, Webhook, Map, Heart, Send, Smartphone, HelpCircle } from 'lucide-react'
 import HotkeyInput from '../components/HotkeyInput'
 import { useRustStore } from '../store/useRustStore'
 import { useT } from '../i18n'
@@ -53,6 +53,8 @@ export default function Settings() {
   const [poToken, setPoToken] = useState('')
   const [poUser, setPoUser] = useState('')
   const [testMsg, setTestMsg] = useState('') // transient "test sent" channel name
+  const [tgGuide, setTgGuide] = useState(false)
+  const [poGuide, setPoGuide] = useState(false)
 
   const testNotify = async (channel) => {
     await window.electron.testNotify(channel)
@@ -244,7 +246,19 @@ export default function Settings() {
             <Send size={17} className="text-rust-accent" />
             <h2 className="font-semibold text-gray-100">{t('settings.telegram')}</h2>
           </div>
-          <p className="text-sm text-gray-400 mb-3">{t('settings.telegramDesc')}</p>
+          <p className="text-sm text-gray-400 mb-2">{t('settings.telegramDesc')}</p>
+          <button onClick={() => setTgGuide((v) => !v)} className="flex items-center gap-1 text-xs text-rust-accent hover:underline mb-2">
+            <HelpCircle size={13} /> {tgGuide ? t('settings.guideHide') : t('settings.guideShow')}
+          </button>
+          {tgGuide && (
+            <div className="mb-3 rounded-lg bg-rust-bg/60 border border-black/30 p-3 text-xs text-gray-300 whitespace-pre-line leading-relaxed">
+              {t('settings.tgGuide')}
+              <div className="flex flex-wrap gap-2 mt-2">
+                <button onClick={() => window.electron.openExternal('https://t.me/BotFather')} className="px-2 py-1 rounded bg-rust-card border border-black/40 text-rust-accent hover:border-rust-accent">{t('settings.tgOpenBot')}</button>
+                <button onClick={() => window.electron.openExternal('https://t.me/userinfobot')} className="px-2 py-1 rounded bg-rust-card border border-black/40 text-rust-accent hover:border-rust-accent">{t('settings.tgOpenInfo')}</button>
+              </div>
+            </div>
+          )}
           <input
             type="text"
             value={tgToken}
@@ -274,7 +288,18 @@ export default function Settings() {
             <Smartphone size={17} className="text-rust-accent" />
             <h2 className="font-semibold text-gray-100">{t('settings.pushover')}</h2>
           </div>
-          <p className="text-sm text-gray-400 mb-3">{t('settings.pushoverDesc')}</p>
+          <p className="text-sm text-gray-400 mb-2">{t('settings.pushoverDesc')}</p>
+          <button onClick={() => setPoGuide((v) => !v)} className="flex items-center gap-1 text-xs text-rust-accent hover:underline mb-2">
+            <HelpCircle size={13} /> {poGuide ? t('settings.guideHide') : t('settings.guideShow')}
+          </button>
+          {poGuide && (
+            <div className="mb-3 rounded-lg bg-rust-bg/60 border border-black/30 p-3 text-xs text-gray-300 whitespace-pre-line leading-relaxed">
+              {t('settings.poGuide')}
+              <div className="mt-2">
+                <button onClick={() => window.electron.openExternal('https://pushover.net')} className="px-2 py-1 rounded bg-rust-card border border-black/40 text-rust-accent hover:border-rust-accent">{t('settings.poOpenSite')}</button>
+              </div>
+            </div>
+          )}
           <input
             type="text"
             value={poToken}
