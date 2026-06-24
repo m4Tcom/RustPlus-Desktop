@@ -255,6 +255,8 @@ export const TRANSLATIONS = {
     "raid.total": "Full raid with a single tool",
     "raid.note": "Values from rustlabs (soft side, cheapest raid). Sulfur shown where craftable.",
     "lang.title": "Language",
+    "error.title": "Something went wrong",
+    "error.retry": "Try again",
   },
   'de': {
     "app.subtitle": "Desktop",
@@ -507,6 +509,8 @@ export const TRANSLATIONS = {
     "raid.total": "Kompletter Raid mit nur einem Tool",
     "raid.note": "Werte von rustlabs (weiche Seite, günstigster Raid). Schwefel sofern craftbar.",
     "lang.title": "Sprache",
+    "error.title": "Etwas ist schiefgelaufen",
+    "error.retry": "Erneut versuchen",
   },
   'fr': {
     "app.subtitle": "Desktop",
@@ -1455,6 +1459,8 @@ export const TRANSLATIONS = {
     "raid.total": "Весь рейд одним инструментом",
     "raid.note": "Данные с rustlabs (мягкая сторона, дешевле всего). Сера, если крафтится.",
     "lang.title": "Язык",
+    "error.title": "Что-то пошло не так",
+    "error.retry": "Повторить",
   },
   'pt-BR': {
     "app.subtitle": "Desktop",
@@ -4955,6 +4961,8 @@ export const TRANSLATIONS = {
     "raid.total": "단일 도구로 전체 레이드",
     "raid.note": "rustlabs 데이터 (약한 면, 최저 비용). 제작 가능한 경우 유황 표시.",
     "lang.title": "언어",
+    "error.title": "문제가 발생했습니다",
+    "error.retry": "다시 시도",
   },
   'zh-CN': {
     "app.subtitle": "Desktop",
@@ -5207,6 +5215,8 @@ export const TRANSLATIONS = {
     "raid.total": "仅用单一工具的完整突袭",
     "raid.note": "数据来自 rustlabs（软面，最低成本）。可制作时显示硫磺。",
     "lang.title": "语言",
+    "error.title": "出了点问题",
+    "error.retry": "重试",
   },
   'zh-TW': {
     "app.subtitle": "Desktop",
@@ -5459,6 +5469,8 @@ export const TRANSLATIONS = {
     "raid.total": "僅用單一工具的完整突襲",
     "raid.note": "資料來自 rustlabs（軟面，最低成本）。可製作時顯示硫磺。",
     "lang.title": "語言",
+    "error.title": "發生錯誤",
+    "error.retry": "重試",
   },
   'vi': {
     "app.subtitle": "Desktop",

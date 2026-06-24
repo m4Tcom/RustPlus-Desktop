@@ -13,6 +13,7 @@ import Settings from './pages/Settings'
 import Items from './pages/Items'
 import RaidCalc from './pages/RaidCalc'
 import EventWatcher from './components/EventWatcher'
+import ErrorBoundary from './components/ErrorBoundary'
 import { useRustStore } from './store/useRustStore'
 import { useT } from './i18n'
 import { speak } from './lib/tts'
@@ -34,7 +35,7 @@ const PAGES = {
 export default function App() {
   const view = useRustStore((s) => s.view)
   const store = useRustStore
-  const { lang } = useT()
+  const { lang, t } = useT()
 
   // Subscribe to all Main-process events once on mount.
   useEffect(() => {
@@ -96,7 +97,9 @@ export default function App() {
       <div className="flex flex-col flex-1 min-w-0">
         <StatusBar />
         <main className="flex-1 min-h-0">
-          <Page />
+          <ErrorBoundary resetKey={view} title={t('error.title')} retryLabel={t('error.retry')}>
+            <Page />
+          </ErrorBoundary>
         </main>
       </div>
     </div>
