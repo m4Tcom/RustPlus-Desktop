@@ -492,6 +492,10 @@ function connect({ ip, port, steamId, playerToken }) {
         lastMapSize = info.mapSize || 0
         upsertProfile({ ip, port: String(port), steamId, playerToken, name: info?.name })
         send('rust:profilesUpdate', store.get('profiles'))
+        // Authoritative own Steam ID for this connection (used to identify
+        // "me" on the map / minimap). Sent every connect so switching servers
+        // or accounts updates it, not just the value saved at app start.
+        send('rust:self', { steamId: mySteamId })
         sendStatus('connected', info)
         startPolling()
         resolve(info)

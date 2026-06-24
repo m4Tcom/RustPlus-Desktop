@@ -47,6 +47,9 @@ export default function App() {
 
     const unsubs = [
       e.onStatus(({ status, detail }) => setStatus(status, detail)),
+      // Authoritative own Steam ID for the active connection (keeps "center on
+      // me" / self highlight correct even after switching servers/accounts).
+      e.onSelf(({ steamId }) => steamId && store.getState().setMySteamId(String(steamId))),
       e.onTeamUpdate((team) => setTeam(team)),
       e.onChatUpdate((chat) => setChat(chat)),
       e.onChatMessage((msg) => {
@@ -78,7 +81,7 @@ export default function App() {
 
     // Remember our own Steam ID (for "center on me" / self highlight).
     e.getSavedConfig().then((cfg) => {
-      if (cfg?.steamId) store.getState().setMySteamId(cfg.steamId)
+      if (cfg?.steamId) store.getState().setMySteamId(String(cfg.steamId))
     })
 
     return () => unsubs.forEach((u) => u?.())

@@ -90,6 +90,7 @@ contextBridge.exposeInMainWorld('electron', {
 
   // Events (Main -> Renderer). Each returns an unsubscribe fn.
   onStatus: (cb) => on('rust:status', cb),
+  onSelf: (cb) => on('rust:self', cb),
   onPairStatus: (cb) => on('rust:pairStatus', cb),
   onMapImage: (cb) => on('rust:mapImage', cb),
   onTeamUpdate: (cb) => on('rust:teamUpdate', cb),
