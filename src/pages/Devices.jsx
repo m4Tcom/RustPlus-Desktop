@@ -7,7 +7,7 @@ import { useT } from '../i18n'
 const TYPE_KEY = { 1: 'device.typeSwitch', 2: 'device.typeAlarm', 3: 'device.typeStorage' }
 
 export default function Devices() {
-  const { t } = useT()
+  const { t, lang } = useT()
   const devices = useRustStore((s) => s.devices)
   const setDevices = useRustStore((s) => s.setDevices)
 
@@ -179,7 +179,7 @@ export default function Devices() {
                     {items.map((it, i) => (
                       <div key={i} className="flex justify-between text-xs gap-2">
                         <span className="text-gray-300 truncate">
-                          {itemName(it.itemId)}{it.itemIsBlueprint ? ` (${t('devices.blueprint')})` : ''}
+                          {itemName(it.itemId, lang)}{it.itemIsBlueprint ? ` (${t('devices.blueprint')})` : ''}
                         </span>
                         <span className="text-gray-500 tabular-nums shrink-0">×{it.quantity}</span>
                       </div>

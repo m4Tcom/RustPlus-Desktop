@@ -8,14 +8,18 @@ import { useT } from '../i18n'
 const ENTRIES = Object.entries(itemsMap) // [id, name]
 
 export default function Items() {
-  const { t } = useT()
+  const { t, lang } = useT()
   const [q, setQ] = useState('')
 
   const results = useMemo(() => {
     const s = q.trim().toLowerCase()
     if (!s) return []
-    return ENTRIES.filter(([, name]) => name.toLowerCase().includes(s)).slice(0, 80)
-  }, [q])
+    // Match the English name and the localized name, so users can search in
+    // either language.
+    return ENTRIES.filter(([id, name]) =>
+      name.toLowerCase().includes(s) || itemName(id, lang).toLowerCase().includes(s),
+    ).slice(0, 80)
+  }, [q, lang])
 
   return (
     <div className="h-full overflow-y-auto p-6">
@@ -48,7 +52,7 @@ export default function Items() {
               return (
                 <div key={id} className="bg-rust-card rounded-lg px-4 py-3 border border-black/30">
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-100 font-medium">{name}</span>
+                    <span className="text-gray-100 font-medium">{itemName(id, lang)}</span>
                     <span className="text-[11px] text-gray-600">#{id}</span>
                   </div>
                   {recipe && recipe.ing.length > 0 ? (
@@ -58,7 +62,7 @@ export default function Items() {
                       </span>
                       {recipe.ing.map(([ingId, qty], i) => (
                         <span key={i} className="text-gray-300">
-                          {qty}× {itemName(ingId)}
+                          {qty}× {itemName(ingId, lang)}
                         </span>
                       ))}
                       {recipe.wb ? (

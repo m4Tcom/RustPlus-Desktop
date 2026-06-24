@@ -236,8 +236,8 @@ export default function MapPage() {
       for (const o of m.sellOrders) {
         out.push({
           shopId: m.id, shopName: m.name, x: m.x, y: m.y,
-          item: itemName(o.itemId), itemBp: o.itemIsBlueprint, quantity: o.quantity,
-          cost: o.costPerItem, currency: itemName(o.currencyId), currencyBp: o.currencyIsBlueprint,
+          item: itemName(o.itemId, lang), itemBp: o.itemIsBlueprint, quantity: o.quantity,
+          cost: o.costPerItem, currency: itemName(o.currencyId, lang), currencyBp: o.currencyIsBlueprint,
           stock: o.amountInStock,
         })
       }
@@ -245,7 +245,7 @@ export default function MapPage() {
     const q = shopQuery.trim().toLowerCase()
     const filtered = q ? out.filter((o) => o.item.toLowerCase().includes(q) || o.currency.toLowerCase().includes(q)) : out
     return filtered.sort((a, b) => (b.stock > 0) - (a.stock > 0) || a.item.localeCompare(b.item))
-  }, [markers, shopQuery, mapSize])
+  }, [markers, shopQuery, mapSize, lang])
 
   // Toggleable legend layers (icon swatch + label per category).
   const legendItems = [
@@ -547,12 +547,12 @@ export default function MapPage() {
               {activeShop.sellOrders.map((o, i) => (
                 <div key={i} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg bg-black/20 text-sm ${o.amountInStock === 0 ? 'opacity-40' : ''}`}>
                   <div className="flex-1 min-w-0">
-                    <div className="text-gray-100 truncate">{o.quantity}× {itemName(o.itemId)}{o.itemIsBlueprint ? ` (${t('map.bp')})` : ''}</div>
+                    <div className="text-gray-100 truncate">{o.quantity}× {itemName(o.itemId, lang)}{o.itemIsBlueprint ? ` (${t('map.bp')})` : ''}</div>
                     <div className="text-[11px] text-gray-500">{t('map.stock', { count: o.amountInStock })}</div>
                   </div>
                   <div className="text-right shrink-0 max-w-[90px]">
                     <div className="text-gray-300">{o.costPerItem}×</div>
-                    <div className="text-[11px] text-gray-500 truncate">{itemName(o.currencyId)}{o.currencyIsBlueprint ? ` (${t('map.bp')})` : ''}</div>
+                    <div className="text-[11px] text-gray-500 truncate">{itemName(o.currencyId, lang)}{o.currencyIsBlueprint ? ` (${t('map.bp')})` : ''}</div>
                   </div>
                 </div>
               ))}
