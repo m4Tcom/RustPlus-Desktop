@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Bomb, Search, Plus, Minus, X, Trash2 } from 'lucide-react'
 import raid from '../lib/raidcost.json'
+import { raidName } from '../lib/raidcost'
 import { useT } from '../i18n'
 
 export default function RaidCalc() {
-  const { t } = useT()
+  const { t, lang } = useT()
   const [catId, setCatId] = useState(raid.categories[0].id)
   const [query, setQuery] = useState('')
   const [cart, setCart] = useState([]) // [{ name, qty }]
@@ -21,8 +22,11 @@ export default function RaidCalc() {
   const list = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return cat.structures
-    return cat.structures.filter((s) => s.name.toLowerCase().includes(q))
-  }, [cat, query])
+    // Match the English name and the localized name, so search works in either.
+    return cat.structures.filter(
+      (s) => s.name.toLowerCase().includes(q) || raidName(s.name, lang).toLowerCase().includes(q),
+    )
+  }, [cat, query, lang])
 
   const addToCart = (name) =>
     setCart((c) => {
@@ -108,7 +112,7 @@ export default function RaidCalc() {
               className={`px-3 py-1.5 rounded-lg text-sm border transition-colors
                 ${catId === c.id ? 'bg-rust-accent border-rust-accent text-white' : 'bg-rust-card border-black/30 text-gray-300 hover:bg-white/5'}`}
             >
-              {c.label}
+              {raidName(c.label, lang)}
             </button>
           ))}
         </div>
@@ -137,7 +141,7 @@ export default function RaidCalc() {
                 className={`px-3 py-1.5 rounded-lg text-sm border transition-colors flex items-center gap-1.5
                   ${inCart ? 'bg-rust-accent/25 border-rust-accent text-white' : 'bg-rust-card border-black/30 text-gray-300 hover:bg-white/5'}`}
               >
-                {s.name}
+                {raidName(s.name, lang)}
                 {inCart > 0 && <span className="text-[11px] bg-rust-accent text-white rounded-full px-1.5 leading-5">{inCart}</span>}
                 <Plus size={13} className="opacity-60" />
               </button>
@@ -166,7 +170,7 @@ export default function RaidCalc() {
           <div className="bg-rust-card rounded-xl border border-black/30 overflow-hidden mb-5">
             {cart.map(({ name, qty }) => (
               <div key={name} className="flex items-center gap-3 px-4 py-2.5 border-b border-black/20 last:border-0">
-                <span className="flex-1 text-sm text-gray-200 truncate">{name}</span>
+                <span className="flex-1 text-sm text-gray-200 truncate">{raidName(name, lang)}</span>
                 <div className="flex items-center gap-1">
                   <button onClick={() => setQty(name, qty - 1)} className="p-1 rounded hover:bg-white/10 text-gray-400"><Minus size={14} /></button>
                   <input
@@ -196,7 +200,7 @@ export default function RaidCalc() {
                   {cheapest.shopping.map((s, i) => (
                     <span key={s.tool} className="text-sm">
                       <span className="text-rust-accent font-semibold tabular-nums">{s.amount.toLocaleString()}×</span>
-                      <span className="text-gray-200"> {s.tool}</span>
+                      <span className="text-gray-200"> {raidName(s.tool, lang)}</span>
                       {i < cheapest.shopping.length - 1 && <span className="text-gray-600"> ·</span>}
                     </span>
                   ))}
@@ -206,8 +210,8 @@ export default function RaidCalc() {
               {cheapest.rows.map((r) => (
                 <div key={r.name} className="flex items-center gap-2 px-4 py-2 text-sm border-b border-black/20">
                   <span className="text-gray-500 tabular-nums shrink-0">{r.count}×</span>
-                  <span className="text-gray-400 flex-1 truncate">{r.name}</span>
-                  <span className="text-gray-300 tabular-nums">{r.amount.toLocaleString()}× {r.tool}</span>
+                  <span className="text-gray-400 flex-1 truncate">{raidName(r.name, lang)}</span>
+                  <span className="text-gray-300 tabular-nums">{r.amount.toLocaleString()}× {raidName(r.tool, lang)}</span>
                   <span className="text-gray-600 tabular-nums text-right w-16 shrink-0">{r.sulfur.toLocaleString()}</span>
                 </div>
               ))}
@@ -232,7 +236,7 @@ export default function RaidCalc() {
           ) : (
             totals.map(({ tool, qty, sulfur, hasSulfur }) => (
               <div key={tool} className="grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-2.5 text-sm border-b border-black/20 last:border-0">
-                <span className="text-gray-200">{tool}</span>
+                <span className="text-gray-200">{raidName(tool, lang)}</span>
                 <span className="text-right text-gray-100 tabular-nums font-medium">{qty.toLocaleString()}×</span>
                 <span className="text-right text-gray-400 tabular-nums">{hasSulfur ? sulfur.toLocaleString() : '—'}</span>
               </div>
